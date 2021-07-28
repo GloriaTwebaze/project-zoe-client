@@ -1,13 +1,18 @@
 export const AUTH_TOKEN_KEY = "__demo__eva__token";
 export const AUTH_USER_KEY = "__demo__eva__user";
 
-export const appRoles = {
+export const appPermissions = {
   roleDashboard: "DASHBOARD",
   roleCrmView: "CRM_VIEW",
   roleCrmEdit: "CRM_EDIT",
 
   roleUserView: "USER_VIEW",
   roleUserEdit: "USER_EDIT",
+
+  roleEdit: "ROLE_EDIT",
+
+  roleTagView: "TAG_VIEW",
+  roleTagEdit: "TAG_EDIT",
 
   roleGroupView: "GROUP_VIEW",
   roleGroupEdit: "GROUP_EDIT",
@@ -16,7 +21,7 @@ export const appRoles = {
   roleEventEdit: "EVENT_EDIT",
 };
 
-export const rolesList = Object.values(appRoles);
+export const permissionsList = Object.values(appPermissions);
 
 export const eventsCategories = {
   garage: "garage",
@@ -88,6 +93,7 @@ export const remoteRoutes = {
   tags: url + "/api/tags",
   users: url + "/api/users",
   userGroups: url + "/api/user-groups",
+  roles: url + "/api/user-roles",
   contactsPhone: url + "/api/crm/phones",
   contactsAddress: url + "/api/crm/addresses",
   contactsIdentification: url + "/api/crm/identifications",
