@@ -14,19 +14,18 @@ import Toast from "../../../utils/Toast"
 import { cleanComboValue } from "../../../utils/dataHelpers"
 import { parseGooglePlace } from "../../../components/plain-inputs/PMapsInput"
 import { XMapsInput } from "../../../components/inputs/XMapsInput"
-import { IEvent } from "../types"
+import { IEvent } from "../../../modules/events/types"
 import XDateTimeInput from "../../../components/inputs/XDateTimeInput"
 import { useSelector } from "react-redux"
 import { IState } from "../../../data/types"
-import EventMetadataForm from "../details/EventMetadataForm"
+import EventMetadataForm from "../../../modules/events/details/EventMetadataForm"
 
 interface IProps {
 	data?: Partial<IEvent>
 	isNew: boolean
-	onCreated?: (g: any) => any
-	onUpdated?: (g: any) => any
-	onDeleted?: (g: any) => any
-	onCancel?: () => any
+	onCreated?: any
+	scheduleData?: any
+	cal?: any
 }
 
 const schema = yup.object().shape({
@@ -53,20 +52,13 @@ const initialData = {
 	metaData: {},
 }
 
-const EventForm = ({
-	data,
-	isNew,
-	onCreated,
-	onUpdated,
-	onDeleted,
-	onCancel,
-}: IProps) => {
+const EventsForm = ({ data, isNew, onCreated, scheduleData, cal }: IProps) => {
 	const [loading, setLoading] = useState<boolean>(false)
 	const [frequency, setFrequency] = useState("")
 	const user = useSelector((state: IState) => state.core.user)
 	const [group, setGroup] = useState<any>()
 	const [event, setEvent] = useState<any>()
-
+	console.log(scheduleData)
 	useEffect(() => {
 		if (event && group) {
 			getFrequency(event, group)
@@ -102,8 +94,22 @@ const EventForm = ({
 			groupId: cleanComboValue(values.group),
 			metaData: values.metaData,
 		}
+		const schedule = {
+			id: values.id,
+			title: values.category.name,
+			isAllDay: scheduleData.isAllDay,
+			start: values.startDate,
+			end: values.endDate,
+			category: scheduleData.isAllDay ? "allday" : "time",
+			dueDateClass: "",
+			location: scheduleData.location,
+			raw: {
+				class: "",
+			},
+			state: scheduleData.state,
+		}
 
-		actions.resetForm()
+		cal.current.calendarInst.createSchedules([schedule])
 
 		const submission: ISubmission = {
 			url: remoteRoutes.events,
@@ -113,29 +119,12 @@ const EventForm = ({
 			onAjaxComplete: (data: any) => {
 				if (isNew) {
 					onCreated && onCreated(data)
-				} else {
-					onUpdated && onUpdated(data)
 				}
 				actions.resetForm()
 				actions.setSubmitting(false)
 			},
 		}
 		handleSubmission(submission)
-	}
-
-	const handleDelete = () => {
-		setLoading(true)
-		del(
-			`${remoteRoutes.events}/${data?.id}`,
-			() => {
-				Toast.success("Operation succeeded")
-				onDeleted && onDeleted(data?.id)
-			},
-			undefined,
-			() => {
-				setLoading(false)
-			}
-		)
 	}
 
 	const { placeId, name } = data?.venue || {}
@@ -146,9 +135,7 @@ const EventForm = ({
 			onSubmit={handleSubmit}
 			schema={schema}
 			initialValues={{ ...initialData, ...data, venue }}
-			onDelete={handleDelete}
 			loading={loading}
-			onCancel={onCancel}
 		>
 			{(formData: any) => (
 				<Grid spacing={1} container>
@@ -211,4 +198,4 @@ const EventForm = ({
 	)
 }
 
-export default EventForm
+export default EventsForm
