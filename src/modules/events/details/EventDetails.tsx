@@ -140,7 +140,7 @@ export default function Details() {
 		},
 	]
 
-	console.log(data, "##########")
+	console.log("========selected====", data)
 	return (
 		<Layout title='Event details'>
 			<Box className={classes.root}>
