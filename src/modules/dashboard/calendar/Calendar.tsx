@@ -1,4 +1,10 @@
-import React, { useCallback, useEffect, useRef, useState } from "react"
+import React, {
+	useCallback,
+	useEffect,
+	useReducer,
+	useRef,
+	useState,
+} from "react"
 import TUICalendar from "@toast-ui/react-calendar"
 import { ISchedule, ICalendarInfo } from "tui-calendar"
 import "tui-calendar/dist/tui-calendar.css"
@@ -10,26 +16,24 @@ import { localRoutes, remoteRoutes } from "../../../data/constants"
 import { get, put, del, post } from "../../../utils/ajax"
 import Toast from "../../../utils/Toast"
 import { useDispatch, useSelector } from "react-redux"
-import { IState } from "../../../data/types"
 import EditDialog from "../../../components/EditDialog"
 import EventForm from "../../events/forms/EventForm"
 import { eventsEdit, IEventState } from "../../../data/events/eventsReducer"
-import { useHistory } from "react-router"
 import { IEvent } from "../../events/types"
 import AddIcon from "@material-ui/icons/Add"
+import Calendar from "@toast-ui/react-calendar"
 
 const start = new Date()
 const end = new Date(new Date().setMinutes(start.getMinutes() + 30))
+const intl = new Intl.DateTimeFormat("en-US")
 
 const CalendarEvents = () => {
 	const cal = useRef(null) // this will store the `Calendar` instance.
+	const [updateCount, forceUpdate] = useReducer((c) => c + 1, 0)
+	const [currentRange, setCurrentRange] = useState("")
 	const [dialog, setDialog] = useState(false)
 	const [value, setValue] = useState<any[]>([])
-	// const user = useSelector((state: IState) => state.core.user)
 	const [schedules, setSchedules] = useState<any[]>([])
-	const { selected, data }: IEventState = useSelector(
-		(state: any) => state.events
-	)
 	const dispatch = useDispatch()
 	const [selectedEvent, setSelectedEvent] = useState<Partial<IEvent>>({})
 	const [events, setEvents] = useState<IEvent[]>([])
@@ -57,13 +61,16 @@ const CalendarEvents = () => {
 			}
 			setSchedules(myEvents)
 		})
-	}, [])
+	}, [dialog])
 
-	const onBeforeCreateSchedule = useCallback((scheduleData) => {
-		setValue(scheduleData)
+	const onBeforeCreateSchedule = useCallback(
+		(scheduleData) => {
+			setValue(scheduleData)
 
-		setDialog(true)
-	}, [])
+			setDialog(true)
+		},
+		[dialog]
+	)
 
 	const onBeforeDeleteSchedule = useCallback((res) => {
 		const { id, calendarId, title } = res.schedule
@@ -79,7 +86,6 @@ const CalendarEvents = () => {
 		setIsNew(false)
 		for (let i = 0; i < events.length; i++) {
 			if (events[i].id === e.schedule.id) {
-				console.log("====ourdata===", events[i])
 				setSelectedEvent({ ...events[i] })
 			}
 		}
@@ -98,22 +104,31 @@ const CalendarEvents = () => {
 		dispatch(eventsEdit(dt))
 	}
 	function handleCreated() {
-		console.log("it worked")
 		setDialog(false)
-
-		setSchedules([])
 	}
 
 	function onClickTodayBtn() {
 		cal.current.calendarInst.today()
+		cal.current.calendarInst.changeView("day", true)
+		forceUpdate()
 	}
 
 	const moveToPrev = () => {
 		cal.current.calendarInst.prev()
+		forceUpdate()
 	}
 	const moveToNext = () => {
 		cal.current.calendarInst.next()
+		forceUpdate()
 	}
+	useEffect(() => {
+		if (cal) {
+			const rangeStart = cal.current.calendarInst.getDateRangeStart().getTime()
+			const rangeEnd = cal.current.calendarInst.getDateRangeEnd().getTime()
+
+			setCurrentRange(`${intl.format(rangeStart)} ~ ${intl.format(rangeEnd)}`)
+		}
+	}, [updateCount, cal])
 
 	return (
 		<Layout>
@@ -149,9 +164,31 @@ const CalendarEvents = () => {
 					<Grid item xs={12}>
 						<div>
 							<div className='button'>
-								<Button onClick={onClickTodayBtn}>Today</Button>
-								<Button onClick={moveToPrev}>←</Button>
-								<Button onClick={moveToNext}>→</Button>
+								<span>Current range: {currentRange}</span>&nbsp;
+								<Button
+									variant='outlined'
+									size='small'
+									color='primary'
+									onClick={onClickTodayBtn}
+								>
+									Today
+								</Button>
+								<Button
+									variant='outlined'
+									size='small'
+									color='primary'
+									onClick={moveToPrev}
+								>
+									{"<"}Prev Month
+								</Button>
+								<Button
+									variant='outlined'
+									size='small'
+									color='primary'
+									onClick={moveToNext}
+								>
+									Next Month{">"}
+								</Button>
 							</div>
 
 							<TUICalendar
