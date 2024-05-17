@@ -65,6 +65,8 @@ export const localRoutes = {
   help: "/help",
   login: "/login",
   home: "/",
+  calendar: "/calendar"
+  
 };
 
 export const isDebug = process.env.NODE_ENV !== "production";
